@@ -161,7 +161,7 @@ public class Model extends Observable {
         for (int col = 0; col < 4; col++) {
             for (int row = 0; row < 4; row++) {
                 t = b.tile(col, row);
-                if (!(t == null)){
+                if (t != null){
                     if (t.value() == MAX_PIECE) {
                         return true;
                     }
@@ -179,6 +179,25 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        if (emptySpaceExists(b)){
+            return true;
+        }
+        Tile t1 = null, t2 = null;
+        for (int col = 0; col < 4; col++){
+            for (int row = 0; row < 4; row++){
+                if (b.tile(col, row) != null) {
+                    t1 = b.tile(col, row);
+                    for (int row2 = row + 1; row2 < 4; row2++) {
+                        if (b.tile(col, row2) != null) {
+                            t2 = b.tile(col, row2);
+                        }
+                    }
+                }
+                if (t1.value() == t2.value()){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
