@@ -365,8 +365,6 @@ public class Model extends Observable {
                                 board.move(0, row, t);
                             }
                         }
-                    } else {
-                        nochangenum++;
                     }
                 }
             }
