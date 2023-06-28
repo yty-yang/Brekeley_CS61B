@@ -2,11 +2,11 @@ package deque;
 
 public class LinkedListDeque<T> {
     private class Node {
-        public Node prev;
-        public T item;
-        public Node next;
+        private Node prev;
+        private T item;
+        private Node next;
 
-        public Node(T x, Node p, Node n) {
+        Node(T x, Node p, Node n) {
             item = x;
             prev = p;
             next = n;
@@ -103,19 +103,18 @@ public class LinkedListDeque<T> {
         return p.item;
     }
 
-    public T getRecursive(int index){
-        if (index>=size)
+    public T getRecursive(int index) {
+        if (index >= size) {
             return null;
-        return getRecursive(0,index,sentinel.next);
-    }
-    private T getRecursive(int pos,int index,Node x){
-        if (pos==index)
-            return x.item;
-        return getRecursive(pos+1,index,x.next);
+        }
+        return getRecursive(0, index, sentinel.next);
     }
 
-    public static void main(String[]args) {
-        LinkedListDeque<Integer> t = new LinkedListDeque<>();
-        t.printDeque();
+    private T getRecursive(int pos, int index, Node x) {
+        if (pos == index) {
+            return x.item;
+        }
+        return getRecursive(pos + 1, index, x.next);
     }
+
 }

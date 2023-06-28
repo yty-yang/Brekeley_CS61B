@@ -1,11 +1,12 @@
 package deque;
 
 public class ArrayDeque<T> {
-    public T[] array;
+    private T[] array;
     private int size;
     private int front;
     private int end;
     private int arraysize;
+
     public ArrayDeque() {
         array = (T[]) new Object[8];
         arraysize = 8;
