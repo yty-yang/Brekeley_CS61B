@@ -75,11 +75,6 @@ public class ArrayDeque<T> implements Deque<T> {
     }
 
     @Override
-    public boolean isEmpty() {
-        return (size == 0);
-    }
-
-    @Override
     public int size() {
         return size;
     }
@@ -202,4 +197,12 @@ public class ArrayDeque<T> implements Deque<T> {
             return array[front + index - arraysize];
         }
     }
+
+    //    public Iterator<T> iterator() {
+//
+//    }
+//
+//    public boolean equals(Object o) {
+//
+//    }
 }
