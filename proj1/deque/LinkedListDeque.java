@@ -25,19 +25,19 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         size = 0;
     }
 
-    public LinkedListDeque(LinkedListDeque other) {
-        T temp;
-        sentinel = new Node(null, null, null);
-        sentinel.next = sentinel;
-        sentinel.prev = sentinel;
-
-        for (int i = 0; i < other.size(); i++) {
-            temp = (T) other.get(i);
-            sentinel.prev = new Node(temp, sentinel.prev, sentinel);
-            sentinel.prev.prev.next = sentinel.prev;
-        }
-        size = other.size();
-    }
+//    public LinkedListDeque(LinkedListDeque other) {
+//        T temp;
+//        sentinel = new Node(null, null, null);
+//        sentinel.next = sentinel;
+//        sentinel.prev = sentinel;
+//
+//        for (int i = 0; i < other.size(); i++) {
+//            temp = (T) other.get(i);
+//            sentinel.prev = new Node(temp, sentinel.prev, sentinel);
+//            sentinel.prev.prev.next = sentinel.prev;
+//        }
+//        size = other.size();
+//    }
 
     @Override
     public void addFirst(T item) {
