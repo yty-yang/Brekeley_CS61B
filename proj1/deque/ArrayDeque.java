@@ -17,32 +17,6 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         end = -1;
     }
 
-//    public ArrayDeque(ArrayDeque other) {
-//        array = (T[]) new Object[other.size];
-//        arraysize = other.size;
-//        size = other.size;
-//        front = 0;
-//        end = size - 1;
-//
-//        int index = 0;
-//
-//        if (other.front <= other.end) {
-//            for (int i = other.front; i <= other.end; i++) {
-//                array[index] = (T) other.get(i);
-//                index++;
-//            }
-//        } else {
-//            for (int i = front; i < arraysize; i++) {
-//                array[index] = (T) other.get(i);
-//                index++;
-//            }
-//            for (int i = 0; i <= end; i++) {
-//                array[index] = (T) other.get(i);
-//                index++;
-//            }
-//        }
-//    }
-
     @Override
     public void addFirst(T item) {
         size++;
