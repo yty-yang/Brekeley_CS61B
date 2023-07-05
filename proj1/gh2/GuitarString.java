@@ -5,7 +5,6 @@ import deque.ArrayDeque;
 import deque.Deque;
 import deque.LinkedListDeque;
 // TODO: maybe more imports
-import java.lang.Math;
 
 //Note: This file will not compile until you complete the Deque implementations
 public class GuitarString {
