@@ -1,5 +1,6 @@
 package deque;
 
+import javax.swing.text.html.HTMLDocument;
 import java.util.Iterator;
 
 public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
@@ -177,7 +178,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private class ArrayDequeIterator implements Iterator<T> {
         private int pos;
 
-        public ArrayDequeIterator() {
+        ArrayDequeIterator() {
             pos = 0;
         }
 
@@ -189,10 +190,10 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         @Override
         public T next() {
             T returnItem;
-            if (front + pos < size) {
+            if (front + pos < arraysize) {
                 returnItem = array[front + pos];
             } else {
-                returnItem = array[front + pos - size];
+                returnItem = array[front + pos - arraysize];
             }
             pos++;
             return returnItem;
@@ -210,7 +211,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             return true;
         }
 
-        if (o.getClass() != this.getClass()) {
+        if (! (o instanceof Deque)) {
             return false;
         }
 
@@ -220,7 +221,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
 
         for (int i = 0; i < size; i++) {
-            if (this.get(i) != other.get(i)) {
+            if (! this.get(i).equals(other.get(i))) {
                 return false;
             }
         }
