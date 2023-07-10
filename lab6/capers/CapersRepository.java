@@ -58,7 +58,7 @@ public class CapersRepository {
     public static void writeStory(String text) {
         File story = join(CAPERS_FOLDER, "story");
         writeContents(story, text);
-        System.out.println(text);
+        System.out.println(readContentsAsString(story));
     }
 
     /**
