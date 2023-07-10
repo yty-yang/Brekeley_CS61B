@@ -58,6 +58,7 @@ public class CapersRepository {
     public static void writeStory(String text) {
         File story = join(CAPERS_FOLDER, "story");
         writeContents(story, text);
+        System.out.println(text);
     }
 
     /**
@@ -67,7 +68,7 @@ public class CapersRepository {
      */
     public static void makeDog(String name, String breed, int age) {
         Dog d = new Dog(name, breed, age);
-        d.toString();
+        System.out.println(d.toString());
         d.saveDog();
     }
 
