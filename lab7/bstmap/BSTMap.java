@@ -3,7 +3,7 @@ package bstmap;
 import java.util.Iterator;
 import java.util.Set;
 
-public class BSTMap<K extends Comparable, V extends Comparable> implements Map61B<K, V> {
+public class BSTMap<K extends Comparable<K>,V> implements Map61B<K, V> {
     private Node node;
     private int size;
 
@@ -102,7 +102,7 @@ public class BSTMap<K extends Comparable, V extends Comparable> implements Map61
     }
 
     @Override
-    public Set keySet() {
+    public Set<K> keySet() {
         throw new UnsupportedOperationException();
     }
 
@@ -117,7 +117,7 @@ public class BSTMap<K extends Comparable, V extends Comparable> implements Map61
     }
 
     @Override
-    public Iterator iterator() {
+    public Iterator<K> iterator() {
         return new iterator();
     }
 
@@ -136,15 +136,6 @@ public class BSTMap<K extends Comparable, V extends Comparable> implements Map61
     public void printInOrder() {
         for (K i: this) {
             System.out.println(i);
-        }
-    }
-
-    public static void main(String Args[]) {
-        BSTMap<Integer, Integer> m = new BSTMap<>();
-        System.out.println(m.size());
-        for (int i = 0; i < 20; i++) {
-            m.put(i, i);
-            System.out.println(m.size());
         }
     }
 }
