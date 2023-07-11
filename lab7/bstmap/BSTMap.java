@@ -12,10 +12,12 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K, V> {
         private V value;
         private Node left;
         private Node right;
+        private Node parent;
 
-        public Node(K key, V value) {
+        public Node(K key, V value, Node parent) {
             this.key = key;
             this.value = value;
+            this.parent = parent;
         }
 
         boolean containsKey(K key) {
@@ -46,25 +48,25 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K, V> {
             }
         }
 
-        void put(K key, V value) {
+        void put(K key, V value, Node parent) {
             if (this.key == null) {
                 this.key = key;
                 this.value = value;
-                this.left = new Node(null, null);
-                this.right = new Node(null, null);
+                this.left = new Node(null, null, this);
+                this.right = new Node(null, null, this);
                 size++;
             } else if (key.equals(this.key)) {
                 this.value = value;
             } else if (key.compareTo(this.key) < 0) {
-                this.left.put(key, value);
+                this.left.put(key, value, this);
             } else {
-                this.right.put(key, value);
+                this.right.put(key, value, this);
             }
         }
     }
 
     public BSTMap() {
-        node = new Node(null, null);
+        node = new Node(null, null, null);
     }
 
     @Override
@@ -98,7 +100,7 @@ public class BSTMap<K extends Comparable<K>,V> implements Map61B<K, V> {
 
     @Override
     public void put(K key, V value) {
-        node.put(key, value);
+        node.put(key, value, null);
     }
 
     @Override
