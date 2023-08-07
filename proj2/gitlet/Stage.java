@@ -1,45 +1,58 @@
 package gitlet;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Stage implements Serializable {
-    private Map<String, String> blobMap;
+    private String branchName;
+    private Map<String, String> addition;
+    private List<String> removal;
 
-    public Stage() {
-        blobMap = new HashMap<>();
+    public Stage(String name) {
+        branchName = name;
+        addition = new HashMap<>();
+        removal = new LinkedList<>();
     }
 
-    static public Stage load() {
-        return Utils.readObject(Repository.stage_file, Stage.class);
+    public void AddToAddition(String filename, String blobID) {
+        addition.put(filename, blobID);
     }
 
-    public void save() {
-        Utils.writeObject(Repository.stage_file, this);
+    public void RemoveFromAddition(String filename) {
+        addition.remove(filename);
     }
 
-    public Map<String, String> getMap() {
-        return blobMap;
-    }
-
-    public void add(String f, String b) {
-        blobMap.put(f, b);
-    }
-
-    public void addALL(Map<String, String> map) {
-        blobMap.putAll(map);
-    }
-
-    public void remove(String f) {
-        blobMap.remove(f);
-    }
-
-    public void replace(String f, String b) {
-        blobMap.replace(f, b);
+    public void AddToRemoval(String filename) {
+        removal.add(filename);
     }
 
     public void clear() {
-        blobMap.clear();
+        addition.clear();
+        removal.clear();
+    }
+
+    public Map<String, String> getAddition() {
+        return addition;
+    }
+
+    public List<String> getRemoval() {
+        return removal;
+    }
+
+    public void save() {
+        File file = Utils.join(Repository.stages, branchName);
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Utils.writeObject(file, this);
+    }
+
+    public static Stage load(String branchName) {
+        File file = Utils.join(Repository.stages, branchName);
+        return Utils.readObject(file, Stage.class);
     }
 }

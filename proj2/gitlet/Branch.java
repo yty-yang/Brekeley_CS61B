@@ -1,31 +1,40 @@
 package gitlet;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.File;
 
 public class Branch implements Serializable {
-    private String currentBranch;
-    Map<String, CommitTree.Node> branchTOnode;
+    private String name;
+    private Commit endCommit;
 
-    public Branch() {
-        currentBranch = "master";
-        branchTOnode = new HashMap<>();
+    public Branch(String name) {
+        this.name = name;
+        endCommit = null;
     }
 
-    public void add(String branch, CommitTree.Node node) {
-        branchTOnode.put(branch, node);
+    public void setEndCommit(Commit c) {
+        endCommit = c;
+    }
+
+    public Commit getEndCommit() {
+        return endCommit;
     }
 
     public void save() {
-        Utils.writeObject(Repository.branches_file, this);
+        File file = Utils.join(Repository.commits, name);
+        Utils.writeObject(file, this);
     }
 
-    public static Branch load() {
-        return Utils.readObject(Repository.branches_file, Branch.class);
+    public static Branch load(String branchname) {
+        File file = Utils.join(Repository.commits, branchname);
+        return Utils.readObject(file, Branch.class);
     }
 
-    public void changeBranch(String branch) {
-        currentBranch = branch;
+    public static String getCurrentBranchName() {
+        return Utils.readContentsAsString(Repository.currentBranch);
+    }
+
+    public static void changeCurrentBranch(String branchname) {
+        Utils.writeObject(Repository.currentBranch, branchname);
     }
 }

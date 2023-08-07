@@ -3,7 +3,6 @@ package gitlet;
 // any imports you need here
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date; // You'll likely use this in this class
@@ -37,18 +36,16 @@ public class Commit implements Serializable {
     private String ID;
     private String parentID1;
     private String parentID2;
-    private Map<String, String> name_blob;
+    private Map<String, String> fileversion;
 
     public Commit(String m, Date d, String parentID) {
         message = m;
         date = d;
         parentID1 = parentID;
         parentID2 = null;
-        name_blob = new HashMap<>();
+        fileversion = new HashMap<>();
 
         this.ID = Utils.sha1(message) + Utils.sha1(date) + Utils.sha1(parentID1) + Utils.sha1(parentID2);
-
-        addtoCommits();
     }
 
     public Commit(String m, Date d, String ID1, String ID2) {
@@ -56,13 +53,13 @@ public class Commit implements Serializable {
         date = d;
         parentID1 = ID1;
         parentID2 = ID2;
-        name_blob = new HashMap<>();
+        fileversion = new HashMap<>();
 
         this.ID = Utils.sha1(message) + Utils.sha1(date) + Utils.sha1(parentID1) + Utils.sha1(parentID2);
     }
 
-    public Map<String, String> getName_blob() {
-        return name_blob;
+    public Map<String, String> getFileversion() {
+        return fileversion;
     }
 
     public String getID() {
@@ -74,21 +71,17 @@ public class Commit implements Serializable {
     }
 
     public void addBlob(Map<String, String> m) {
-        name_blob = m;
+        fileversion = m;
     }
 
-    public void addtoCommits() {
-        Commits commits = Commits.load();
-        commits.add(ID);
-        commits.save();
+    public void save() {
+        File file = Utils.join(Repository.commits, ID);
+        Utils.writeObject(file, this);
+    }
 
-        File f = Utils.join(Repository.commits, ID);
-        try {
-            f.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        Utils.writeObject(f, this);
+    public static Commit load(String commitID) {
+        File file = Utils.join(Repository.commits, commitID);
+        return Utils.readObject(file, Commit.class);
     }
 
     public String toString() {

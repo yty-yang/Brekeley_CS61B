@@ -30,7 +30,7 @@ public class Main {
                 oprand_check(args, 2);
 
                 message = args[1];
-                Repository.IintCheck();
+                Repository.InitCheck();
                 Repository.ADD(message);
                 break;
             //FILL THE REST IN
@@ -38,55 +38,86 @@ public class Main {
                 oprand_check(args, 2);
 
                 message = args[1];
-                Repository.IintCheck();
+                Repository.InitCheck();
                 Repository.COMMIT(message);
                 break;
             case "rm":
                 oprand_check(args, 2);
 
                 message = args[1];
-                Repository.IintCheck();
+                Repository.InitCheck();
                 Repository.RM(message);
                 break;
             case "log":
                 oprand_check(args, 1);
 
-                Repository.IintCheck();
+                Repository.InitCheck();
                 Repository.LOG();
                 break;
             case "Global-log":
                 oprand_check(args, 1);
 
-                Repository.IintCheck();
+                Repository.InitCheck();
                 Repository.GlobalLOG();
                 break;
             case "find":
                 oprand_check(args, 2);
 
                 message = args[1];
-                Repository.IintCheck();
+                Repository.InitCheck();
                 Repository.FIND(message);
                 break;
             case "status":
                 oprand_check(args, 1);
 
-                Repository.IintCheck();
+                Repository.InitCheck();
                 Repository.STATUS();
                 break;
             case "checkout":
-                Repository.IintCheck();
-                break;
+                if (args.length == 2) {
+                    Repository.InitCheck();
+                    message = args[1];
+                    Repository.CHECKOUT_branch(message);
+                    break;
+                }
+                if (args.length == 3) {
+                    Repository.InitCheck();
+                    message = args[2];
+                    Repository.CHECKOUT_file(message);
+                    break;
+                }
+                if (args.length == 4) {
+                    Repository.InitCheck();
+                    Repository.CHECKOUT_file(args[1], args[3]);
+                    break;
+                }
+                throw new GitletException("No command with that name exists.");
             case "branch":
-                Repository.IintCheck();
+                Repository.InitCheck();
+                oprand_check(args, 2);
+
+                message = args[1];
+                Repository.InitCheck();
+                Repository.BRANCH(message);
                 break;
             case "rm-branch":
-                Repository.IintCheck();
+                Repository.InitCheck();
+                oprand_check(args, 2);
+
+                message = args[1];
+                Repository.InitCheck();
+                Repository.RMBRANCH(message);
                 break;
             case "reset":
-                Repository.IintCheck();
+                Repository.InitCheck();
+                oprand_check(args, 2);
+
+                message = args[1];
+                Repository.InitCheck();
+                Repository.RESET(message);
                 break;
             case "merge":
-                Repository.IintCheck();
+                Repository.InitCheck();
                 break;
             default:
                 throw new GitletException("No command with that name exists.");

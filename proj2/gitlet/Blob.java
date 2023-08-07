@@ -1,33 +1,36 @@
 package gitlet;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
+import java.io.File;
 
 public class Blob implements Serializable {
-    private byte[] content;
     private String ID;
+    private byte[] content;
 
-    public Blob(byte[] c) {
-        this.content = c;
-        this.ID = Utils.sha1(c);
+    public Blob(byte[] content) {
+        this.content = content;
+        ID = Utils.sha1(content);
     }
 
     public String getID() {
         return ID;
     }
 
-    public void addtoBlobs() {
-        Blobs blobs = Blobs.load();
-        blobs.add(ID);
-        blobs.save();
+    public byte[] getContent() {
+        return content;
+    }
 
-        File f = Utils.join(Repository.blobs, ID);
-        try {
-            f.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        Utils.writeObject(f, this);
+    public void save() {
+        File file = Utils.join(Repository.blobs, ID);
+        Utils.writeObject(file, this);
+    }
+
+    public static void main(String[] args) {
+        byte[] message = new byte[2];
+        message[0] = 'a';
+        message[1] = 'b';
+        Blob test = new Blob(message);
+        System.out.println(test.getID());
+        System.out.println(test.content);
     }
 }

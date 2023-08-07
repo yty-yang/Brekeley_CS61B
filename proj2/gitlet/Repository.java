@@ -2,12 +2,9 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import static gitlet.Utils.join;
-import static gitlet.Utils.readContents;
+import static gitlet.Utils.*;
 
 //any imports you need here
 
@@ -20,11 +17,11 @@ import static gitlet.Utils.readContents;
  */
 public class Repository {
     /**
-      add instance variables here.
-      tree headCommit stage nameTOblob
-      List all instance variables of the Repository class here with a useful
-      comment above them describing what that variable represents and how that
-      variable is used. We've provided two examples for you.
+     add instance variables here.
+
+     List all instance variables of the Repository class here with a useful
+     comment above them describing what that variable represents and how that
+     variable is used. We've provided two examples for you.
      */
 
     /**
@@ -37,196 +34,173 @@ public class Repository {
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     public static final File commits = join(GITLET_DIR, "commits");
     public static final File blobs = join(GITLET_DIR, "blobs");
+    public static final File stages = join(GITLET_DIR, "stages");
+    public static final File branches = join(GITLET_DIR, "branches");
 
     /*file*/
-    public static final File stage_file = join(GITLET_DIR, "stage"); //'adding' can put files into stage
-    public static final File structure_file = join(commits, "structure"); //save the relationship of commits
-    public static final File workingdirectory_file = join(GITLET_DIR, "workingdirectory");
-    public static final File branches_file = join(GITLET_DIR, "branches");
-
+    public static final File tree = join(GITLET_DIR, "tree");
+    public static final File currentBranch = join(GITLET_DIR, "currentBranch");
     /*variables*/
-    static private CommitTree tree;
-    static private Commit headCommit;
-    static private Stage stage;
-    static private Map<String, String> nameTOblob;
+
 
     /* fill in the rest of this class. */
     public static void init() {
-        File f;
         if (!GITLET_DIR.exists()) {
             GITLET_DIR.mkdir();
 
             blobs.mkdir();
-            f = join(blobs, "blobs"); // a file to store IDs of all the blob
-            try {
-                f.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            Blobs newblobs = new Blobs();
-            newblobs.save();
-
-            try {
-                stage_file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            Stage newstage = new Stage();
-            newstage.save();
-
-            try {
-                workingdirectory_file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            Status newdir = Status.load();
-            newdir.save();
 
             commits.mkdir();
-            f = join(commits, "commits");
-            try {
-                f.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            Commits newcommits = new Commits();
-            newcommits.save();
 
-            try {
-                structure_file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            Commit first = new Commit("auto", new Date(0), null);
-            CommitTree tree = new CommitTree(first);
+            Commit startcommit = new Commit("auto generated", new Date(0), "");
+            startcommit.save();
+            Tree tree = new Tree(startcommit);
             tree.save();
 
-            try {
-                branches_file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            Branch newbranch = new Branch();
-            newbranch.add("master", tree.getHead());
-            newbranch.save();
+            branches.mkdir();
+            Branch defultbranch = new Branch("master");
+            defultbranch.setEndCommit(startcommit);
+            defultbranch.save();
+
+            Branch.changeCurrentBranch("master");
+
+            stages.mkdir();
+            Stage stage = new Stage("master");
+            stage.save();
         } else {
             throw new GitletException("A Gitlet version-control system already exists in the current directory.");
         }
     }
 
-    public static void IintCheck() {
+    public static void InitCheck() {
         if (!GITLET_DIR.exists()) {
             throw new GitletException("Not in an initialized Gitlet directory.");
         }
     }
 
-    public static void ADD(String f) {
-        File file = join(CWD, f);
+    public static void ADD(String filename) {
+        File file = join(CWD, filename);
         if (!file.exists()) {
             throw new GitletException("File does not exist.");
         }
 
-        Status workingDirectory = Status.load();
-        workingDirectory.add(f);
-        workingDirectory.save();
-
         Blob blob = new Blob(readContents(file));
-        blob.addtoBlobs();
-        String ID = blob.getID();
-
-        SetOrigin();
-
-        if (nameTOblob.containsKey(f)) {
-            String blobID = nameTOblob.get(f);
-            if (blobID.equals(ID)) {
-                stage.remove(f);
-                stage.save();
-                return;
-            }
+        File blobfile = join(blobs, blob.getID());
+        if (!blobfile.exists()) {
+            blob.save();
         }
 
-        Map<String, String> addedMap = stage.getMap();
-
-        if (addedMap.containsKey(f)) {
-            stage.replace(f, ID);
-            stage.save();
-            return;
-        }
-
-        stage.add(f, ID);
-        stage.save();
+        Stage stage = Stage.load(Branch.getCurrentBranchName());
+        stage.AddToAddition(filename, blob.getID());
     }
 
     public static void COMMIT(String message) {
-        checkMessage(message);
-
-        SetOrigin();
-
-        Commit c = new Commit(message, new Date(), headCommit.getID());
-
-        setNameBlobMap();
-
-        c.addBlob(nameTOblob);
-        c.addtoCommits();
-
-        stage.clear();
-        stage.addALL(nameTOblob);
-        stage.save();
-
-        tree.addCommit(c);
-        tree.save();
-    }
-
-    public static void RM(String f) {
-        Status workingDirectory = Status.load();
-
-        if (! workingDirectory.contains(f)) {
-            throw new GitletException("No reason to remove the file.");
+        Stage stage = Stage.load(Branch.getCurrentBranchName());
+        Map<String, String> addition = stage.getAddition();
+        if (addition.isEmpty()) {
+            throw new GitletException("No changes added to the commit.");
         }
 
-        workingDirectory.remove(f);
-        workingDirectory.save();
+        if (message.isBlank()) {
+            throw new GitletException("Please enter a commit message.");
+        }
+
+        Branch branch = Branch.load(Branch.getCurrentBranchName());
+        Tree tree = Tree.load();
+
+        Commit headcommit = tree.getCurrenthead().commit;
+        Commit newcommit = new Commit(message, new Date(), headcommit.getID());
+
+        Map<String, String> fileversion_previous = headcommit.getFileversion();
+        Map<String, String> fileversion = fileversion_previous;
+
+        for (String i : addition.keySet()) {
+            if (fileversion.keySet().contains(i)) {
+                fileversion.replace(i, addition.get(i));
+            }
+        }
+
+        for (String i : stage.getRemoval()) {
+            if (fileversion.keySet().contains(i)) {
+                fileversion.remove(i);
+            }
+        }
+
+        newcommit.addBlob(fileversion);
+        newcommit.save();
+
+        stage.clear();
+
+
+        tree.addCommit(newcommit, Branch.getCurrentBranchName());
+        tree.save();
+
+        branch.setEndCommit(newcommit);
+        branch.save();
+    }
+
+    public static void RM(String filename) {
+        boolean removed = false;
+        Stage stage = Stage.load(Branch.getCurrentBranchName());
+
+        Map<String, String> addition = stage.getAddition();
+        if (addition.containsKey(filename)) {
+            stage.RemoveFromAddition(filename);
+            String blobID = addition.get(filename);
+            File blob = join(blobs, blobID);
+            Utils.restrictedDelete(blob);
+            removed = true;
+        }
+
+        Tree tree = Tree.load();
+        Commit headcommit = tree.getCurrenthead().commit;
+        if (headcommit.getFileversion().keySet().contains(filename)) {
+            stage.AddToRemoval(filename);
+            File file = join(CWD, filename);
+            Utils.restrictedDelete(file);
+            removed = true;
+        }
+
+        if (!removed) {
+            throw new GitletException("No reason to remove the file.");
+        }
     }
 
     public static void LOG() {
-        tree = CommitTree.load();
-        CommitTree.Node head = tree.getHead();
+        Tree tree = Tree.load();
+        Tree.Node node = tree.getCurrenthead();
 
-        while (head.parent1 != null) {
-            headCommit = head.commit;
-            System.out.println(headCommit.toString());
-            head = head.parent1;
+        while (node.parent1 != null) {
+            System.out.println(node.commit);
+            node = node.parent1;
         }
     }
 
     public static void GlobalLOG() {
-        Commits commits = Commits.load();
-        Set<String> allcommits = commits.get();
-        Commit currentcommit;
-        File f;
+        List<String> commitNames = plainFilenamesIn(commits);
 
-        for (String i: allcommits) {
-            f = Utils.join(Repository.commits, i);
-            currentcommit = Utils.readObject(f, Commit.class);
-
-            System.out.println(currentcommit.toString());
+        File file;
+        Commit commit;
+        for (String i : commitNames) {
+            file = join(commits, i);
+            commit = readObject(file, Commit.class);
+            System.out.println(commit);
         }
     }
 
     public static void FIND(String message) {
-        Commits commits = Commits.load();
-        Set<String> allcommits = commits.get();
-        Commit currentcommit;
-        File f;
-        Boolean finded = false;
+        boolean finded = false;
+        List<String> commitNames = plainFilenamesIn(commits);
 
-        for (String i: allcommits) {
-            f = Utils.join(Repository.commits, i);
-            currentcommit = Utils.readObject(f, Commit.class);
+        File file;
+        Commit commit;
+        for (String i : commitNames) {
+            file = join(commits, i);
+            commit = readObject(file, Commit.class);
 
-            if (currentcommit.getMessage().equals(message)) {
+            if (commit.getMessage().equals(message)) {
+                System.out.println(commit.getID());
                 finded = true;
-                System.out.println(currentcommit.getID());
             }
         }
 
@@ -236,44 +210,202 @@ public class Repository {
     }
 
     public static void STATUS() {
-
-    }
-
-    private static void SetOrigin() {
-        tree = CommitTree.load();
-        headCommit = tree.getHeadCommit();
-        stage = Stage.load();
-        nameTOblob = headCommit.getName_blob();
-    }
-
-    private static void checkMessage(String message) {
-        if (message.isBlank()) {
-            throw new GitletException("Please enter a commit message.");
-        }
-    }
-
-    private static void setNameBlobMap() {
-        Map<String, String> previous_nameTOblob = headCommit.getName_blob();
-        Boolean changed = false;
-
-        Status workingDirectory = Status.load();
-
-        for (String i: previous_nameTOblob.keySet()) {
-            if (nameTOblob.containsKey(i)) {
-                if (! previous_nameTOblob.get(i).equals(nameTOblob.get(i))) {
-                    changed = true;
-                }
+        System.out.println("=== Branches ===");
+        List<String> branchNames = plainFilenamesIn(branches);
+        Collections.sort(branchNames);
+        for (String i : branchNames) {
+            if (i.equals(Branch.getCurrentBranchName())) {
+                System.out.println('*' + i);
             } else {
-                if (workingDirectory.contains(i)) {
-                    nameTOblob.put(i, previous_nameTOblob.get(i));
-                }
+                System.out.println(i);
+            }
+        }
+        System.out.println();
 
-                changed = true;
+        System.out.println("=== Staged Files ===");
+        Stage stage = Stage.load(Branch.getCurrentBranchName());
+        List<String> addition = new LinkedList<>();
+        for (String i : stage.getAddition().keySet()) {
+            addition.add(i);
+        }
+        Collections.sort(addition);
+        for (String i : addition) {
+            System.out.println(i);
+        }
+        System.out.println();
+
+        System.out.println("=== Removed Files ===");
+        List<String> removal = stage.getRemoval();
+        Collections.sort(removal);
+        for (String i : removal) {
+            System.out.println(i);
+        }
+        System.out.println();
+
+        List<String> allfiles = plainFilenamesIn(CWD);
+        Set<String> modified = new HashSet<>();
+        Set<String> deleted = new HashSet<>();
+        List<String> untracked = new LinkedList<>();
+
+        Tree tree = Tree.load();
+        Commit commit = tree.getCurrenthead().commit;
+        Blob blob;
+        boolean tracked;
+        for (String i : allfiles) {
+            blob = new Blob(readContents(join(CWD, i)));
+            tracked = false;
+
+            if (stage.getAddition().keySet().contains(i)) {
+                tracked = true;
+                if (!blob.getID().equals(stage.getAddition().get(i))) {
+                    modified.add(i);
+                }
+            } else if (commit.getFileversion().keySet().contains(i)) {
+                tracked = true;
+                if (!blob.getID().equals(commit.getFileversion().get(i))) {
+                    modified.add(i);
+                }
+            }
+
+            if (!tracked) {
+                untracked.add(i);
             }
         }
 
-        if (! changed) {
-            throw new GitletException("No changes added to the commit.");
+        for (String i : stage.getAddition().keySet()) {
+            File file = join(CWD, i);
+            if (!file.exists()) {
+                deleted.add(i);
+            }
         }
+
+        for (String i : commit.getFileversion().keySet()) {
+            if (!stage.getRemoval().contains(i)) {
+                File file = join(CWD, i);
+                if (!file.exists()) {
+                    deleted.add(i);
+                }
+            }
+        }
+
+        System.out.println("=== Modifications Not Staged For Commit ===");
+        for (String i : allfiles) {
+            if (modified.contains(i)) {
+                System.out.println(i + "(modified)");
+            }
+
+            if (deleted.contains(i)) {
+                System.out.println(i + "(deleted)");
+            }
+        }
+        System.out.println();
+
+        System.out.println("=== Untracked Files ===");
+        for (String i : untracked) {
+            System.out.println(i);
+        }
+    }
+
+    public static void CHECKOUT_branch(String branchname) {
+        List<String> branchnames = plainFilenamesIn(branches);
+        if (!branchnames.contains(branchname)) {
+            throw new GitletException("No such branch exists.");
+        }
+        if (branchname.equals(Branch.getCurrentBranchName())) {
+            throw new GitletException("No need to checkout the current branch.");
+        }
+
+        Branch newbranch = Branch.load(branchname);
+        Tree tree = Tree.load();
+        Commit currentcommit = tree.getCurrenthead().commit;
+        Commit newcommit = newbranch.getEndCommit();
+        Stage stage = Stage.load(Branch.getCurrentBranchName());
+        Map<String, String> addition = stage.getAddition();
+        List<String> filenames = plainFilenamesIn(CWD);
+        for (String i : filenames) {
+            if (!addition.containsKey(i) && !currentcommit.getFileversion().containsKey(i) && newcommit.getFileversion().containsKey(i)) {
+                throw new GitletException("There is an untracked file in the way; delete it, or add and commit it first.");
+            }
+        }
+
+
+        for (String i : filenames) {
+            restrictedDelete(join(CWD, i));
+        }
+        String blobID;
+        File file;
+        byte[] content;
+        Map<String, String> fileversion = newcommit.getFileversion();
+        for (String i : fileversion.keySet()) {
+            blobID = fileversion.get(i);
+            file = join(CWD, i);
+            content = readObject(join(blobs, blobID), Blob.class).getContent();
+            writeContents(file, content);
+        }
+        Branch.changeCurrentBranch(branchname);
+        stage.clear();
+        stage.save();
+        tree.changeBranch(branchname);
+        tree.save();
+    }
+
+    public static void CHECKOUT_file(String name) {
+        Tree tree = Tree.load();
+        Commit commit = tree.getCurrenthead().commit;
+
+        checkoutfile(name, commit);
+    }
+
+    public static void CHECKOUT_file(String ID, String name) {
+        File commitfile = join(commits, ID);
+        if (!commitfile.exists()) {
+            throw new GitletException("No commit with that id exists.");
+        }
+        Commit commit = readObject(commitfile, Commit.class);
+
+        checkoutfile(name, commit);
+    }
+
+    private static void checkoutfile(String name, Commit commit) {
+        if (!commit.getFileversion().containsKey(name)) {
+            throw new GitletException("File does not exist in that commit.");
+        }
+
+        String blobID = commit.getFileversion().get(name);
+        File f = join(CWD, name);
+        File blob = join(blobs, blobID);
+        byte[] content = readObject(blob, Blob.class).getContent();
+        writeContents(f, content);
+    }
+
+    public static void BRANCH(String name) {
+        Branch newbranch = new Branch(name);
+        Tree tree = Tree.load();
+        Commit currentcommit = tree.getCurrenthead().commit;
+
+        newbranch.setEndCommit(currentcommit);
+        newbranch.save();
+    }
+
+    public static void RMBRANCH(String name) {
+        File branch = join(branches, name);
+        if (!branch.exists()) {
+            throw new GitletException("A branch with that name does not exist.");
+        }
+
+        if (name.equals(Branch.getCurrentBranchName())) {
+            throw new GitletException("Cannot remove the current branch.");
+        }
+
+        restrictedDelete(branch);
+    }
+
+    public static void RESET(String ID) {
+        File commitfile = join(commits, ID);
+        if (!commitfile.exists()) {
+            throw new GitletException("No commit with that id exists.");
+        }
+
+        Commit commit = readObject(commitfile, Commit.class);
     }
 }
