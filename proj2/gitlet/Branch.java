@@ -2,6 +2,7 @@ package gitlet;
 
 import java.io.Serializable;
 import java.io.File;
+import java.util.Date;
 
 public class Branch implements Serializable {
     private String name;
@@ -36,5 +37,12 @@ public class Branch implements Serializable {
 
     public static void changeCurrentBranch(String branchname) {
         Utils.writeObject(Repository.currentBranch, branchname);
+    }
+
+    public static void main(String[] args) {
+        Commit startcommit = new Commit("auto generated", new Date(0), "");
+        Branch defultbranch = new Branch("master");
+        defultbranch.setEndCommit(startcommit);
+        Utils.serialize(defultbranch);
     }
 }

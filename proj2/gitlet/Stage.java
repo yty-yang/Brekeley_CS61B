@@ -55,4 +55,9 @@ public class Stage implements Serializable {
         File file = Utils.join(Repository.stages, branchName);
         return Utils.readObject(file, Stage.class);
     }
+
+    public static void main(String[] args) {
+        Stage stage = new Stage("master");
+        Utils.serialize(stage);
+    }
 }

@@ -1,17 +1,14 @@
 package gitlet;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Tree implements Serializable {
     private Node node;
     private Node currenthead;
     private Map<String, Node> headlist;
 
-    public class Node {
+    public class Node implements Serializable{
         Commit commit;
         List<Node> next;
         Node parent1;
@@ -64,5 +61,11 @@ public class Tree implements Serializable {
 
     public void changeBranch(String branch) {
         currenthead = headlist.get(branch);
+    }
+
+    public static void main(String[] args) {
+        Commit startcommit = new Commit("auto generated", new Date(0), "");
+        Tree tree = new Tree(startcommit);
+        gitlet.Utils.serialize(tree);
     }
 }
