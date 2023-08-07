@@ -51,7 +51,7 @@ public class Repository {
 
             commits.mkdir();
 
-            Commit startcommit = new Commit("auto generated", new Date(0), "");
+            Commit startcommit = new Commit("initial commit", new Date(0), "");
             startcommit.save();
             Tree tree = new Tree(startcommit);
             tree.save();
@@ -172,6 +172,7 @@ public class Repository {
             System.out.println(node.commit.toString());
             node = node.parent1;
         }
+        System.out.println(node.commit.toString());
     }
 
     public static void GlobalLOG() {
