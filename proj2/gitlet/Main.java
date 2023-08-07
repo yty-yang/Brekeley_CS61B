@@ -23,7 +23,7 @@ public class Main {
             case "init":
                 //handle the `init` command
                 oprand_check(args, 1);
-                Repository.init();
+                Repository.INIT();
                 break;
             case "add":
                 //handle the `add [filename]` command

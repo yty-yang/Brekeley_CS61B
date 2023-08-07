@@ -22,17 +22,17 @@ public class Branch implements Serializable {
     }
 
     public void save() {
-        File file = Utils.join(Repository.commits, name);
+        File file = Utils.join(Repository.branches, name);
         Utils.writeObject(file, this);
     }
 
     public static Branch load(String branchname) {
-        File file = Utils.join(Repository.commits, branchname);
+        File file = Utils.join(Repository.branches, branchname);
         return Utils.readObject(file, Branch.class);
     }
 
     public static String getCurrentBranchName() {
-        return Utils.readContentsAsString(Repository.currentBranch);
+        return Utils.readObject(Repository.currentBranch, String.class);
     }
 
     public static void changeCurrentBranch(String branchname) {

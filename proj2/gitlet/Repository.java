@@ -1,7 +1,6 @@
 package gitlet;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 import static gitlet.Utils.*;
@@ -44,7 +43,7 @@ public class Repository {
 
 
     /* fill in the rest of this class. */
-    public static void init() {
+    public static void INIT() {
         if (!GITLET_DIR.exists()) {
             GITLET_DIR.mkdir();
 
@@ -92,6 +91,7 @@ public class Repository {
 
         Stage stage = Stage.load(Branch.getCurrentBranchName());
         stage.AddToAddition(filename, blob.getID());
+        stage.save();
     }
 
     public static void COMMIT(String message) {
@@ -115,9 +115,7 @@ public class Repository {
         Map<String, String> fileversion = fileversion_previous;
 
         for (String i : addition.keySet()) {
-            if (fileversion.keySet().contains(i)) {
-                fileversion.replace(i, addition.get(i));
-            }
+            fileversion.put(i, addition.get(i));
         }
 
         for (String i : stage.getRemoval()) {
@@ -171,7 +169,7 @@ public class Repository {
         Tree.Node node = tree.getCurrenthead();
 
         while (node.parent1 != null) {
-            System.out.println(node.commit);
+            System.out.println(node.commit.toString());
             node = node.parent1;
         }
     }
@@ -407,5 +405,12 @@ public class Repository {
         }
 
         Commit commit = readObject(commitfile, Commit.class);
+    }
+
+    public static void main(String[] args) {
+        INIT();
+        ADD("gitlet-design.md");
+        COMMIT("added");
+        LOG();
     }
 }

@@ -45,7 +45,7 @@ public class Commit implements Serializable {
         parentID2 = "";
         fileversion = new HashMap<>();
 
-        this.ID = Utils.sha1(message) + Utils.sha1(date.toString()) + Utils.sha1(parentID1) + Utils.sha1(parentID2);
+        this.ID = Utils.sha1(message + date.toString() + parentID1 + parentID2);
     }
 
     public Commit(String m, Date d, String ID1, String ID2) {
@@ -55,7 +55,7 @@ public class Commit implements Serializable {
         parentID2 = ID2;
         fileversion = new HashMap<>();
 
-        this.ID = Utils.sha1(message) + Utils.sha1(date) + Utils.sha1(parentID1) + Utils.sha1(parentID2);
+        this.ID = Utils.sha1(message + date.toString() + parentID1 + parentID2);
     }
 
     public Map<String, String> getFileversion() {
@@ -85,7 +85,7 @@ public class Commit implements Serializable {
     }
 
     public String toString() {
-        if (parentID2 == null) {
+        if (parentID2.equals("")) {
             String dummyString = "===\n";
             String commitString = String.format("commit %s\n", ID);
 
