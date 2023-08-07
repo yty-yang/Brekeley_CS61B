@@ -42,10 +42,10 @@ public class Commit implements Serializable {
         message = m;
         date = d;
         parentID1 = parentID;
-        parentID2 = null;
+        parentID2 = "";
         fileversion = new HashMap<>();
 
-        this.ID = Utils.sha1(message) + Utils.sha1(date) + Utils.sha1(parentID1) + Utils.sha1(parentID2);
+        this.ID = Utils.sha1(message) + Utils.sha1(date.toString()) + Utils.sha1(parentID1) + Utils.sha1(parentID2);
     }
 
     public Commit(String m, Date d, String ID1, String ID2) {
@@ -112,5 +112,10 @@ public class Commit implements Serializable {
             String messageString = String.format("%s\n", message);
             return dummyString + commitString + mergeString + dateString + messageString;
         }
+    }
+
+    public static void main(String[] args) {
+        Commit c = new Commit("aaa", new Date(), "bbb");
+        System.out.println(c.getID());
     }
 }
