@@ -6,7 +6,7 @@ import java.util.Date;
 
 public class Branch implements Serializable {
     private String name;
-    private Commit endCommit;
+    private String endCommit;
 
     public Branch(String name) {
         this.name = name;
@@ -14,10 +14,10 @@ public class Branch implements Serializable {
     }
 
     public void setEndCommit(Commit c) {
-        endCommit = c;
+        endCommit = c.getID();
     }
 
-    public Commit getEndCommit() {
+    public String getEndCommit() {
         return endCommit;
     }
 
@@ -31,12 +31,12 @@ public class Branch implements Serializable {
         return Utils.readObject(file, Branch.class);
     }
 
-    public static String getCurrentBranchName() {
-        return Utils.readObject(Repository.currentBranch, String.class);
+    public static String getHead() {
+        return Utils.readObject(Repository.head, String.class);
     }
 
-    public static void changeCurrentBranch(String branchname) {
-        Utils.writeObject(Repository.currentBranch, branchname);
+    public static void changeHead(String branchname) {
+        Utils.writeObject(Repository.head, branchname);
     }
 
     public static void main(String[] args) {

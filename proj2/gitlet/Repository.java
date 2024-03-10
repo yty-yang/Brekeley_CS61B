@@ -37,9 +37,7 @@ public class Repository {
     public static final File branches = join(GITLET_DIR, "branches");
 
     /*file*/
-    public static final File tree = join(GITLET_DIR, "tree");
-    public static final File currentBranch = join(GITLET_DIR, "currentBranch");
-    /*variables*/
+    public static final File head = join(GITLET_DIR, "currentBranch");
 
 
     /* fill in the rest of this class. */
@@ -53,15 +51,13 @@ public class Repository {
 
             Commit startcommit = new Commit("initial commit", new Date(0), "");
             startcommit.save();
-            Tree tree = new Tree(startcommit);
-            tree.save();
 
             branches.mkdir();
             Branch defultbranch = new Branch("master");
             defultbranch.setEndCommit(startcommit);
             defultbranch.save();
 
-            Branch.changeCurrentBranch("master");
+            Branch.changeHead("master");
 
             stages.mkdir();
             Stage stage = new Stage("master");
@@ -89,13 +85,13 @@ public class Repository {
             blob.save();
         }
 
-        Stage stage = Stage.load(Branch.getCurrentBranchName());
+        Stage stage = Stage.load(Branch.getHead());
         stage.AddToAddition(filename, blob.getID());
         stage.save();
     }
 
     public static void COMMIT(String message) {
-        Stage stage = Stage.load(Branch.getCurrentBranchName());
+        Stage stage = Stage.load(Branch.getHead());
         Map<String, String> addition = stage.getAddition();
         if (addition.isEmpty()) {
             throw new GitletException("No changes added to the commit.");
@@ -105,10 +101,9 @@ public class Repository {
             throw new GitletException("Please enter a commit message.");
         }
 
-        Branch branch = Branch.load(Branch.getCurrentBranchName());
-        Tree tree = Tree.load();
+        Branch branch = Branch.load(Branch.getHead());
 
-        Commit headcommit = tree.getCurrenthead().commit;
+        Commit headcommit = readObject(join(commits, branch.getEndCommit()), Commit.class);
         Commit newcommit = new Commit(message, new Date(), headcommit.getID());
 
         Map<String, String> fileversion_previous = headcommit.getFileversion();
@@ -129,17 +124,13 @@ public class Repository {
 
         stage.clear();
 
-
-        tree.addCommit(newcommit, Branch.getCurrentBranchName());
-        tree.save();
-
         branch.setEndCommit(newcommit);
         branch.save();
     }
 
     public static void RM(String filename) {
         boolean removed = false;
-        Stage stage = Stage.load(Branch.getCurrentBranchName());
+        Stage stage = Stage.load(Branch.getHead());
 
         Map<String, String> addition = stage.getAddition();
         if (addition.containsKey(filename)) {
@@ -150,8 +141,7 @@ public class Repository {
             removed = true;
         }
 
-        Tree tree = Tree.load();
-        Commit headcommit = tree.getCurrenthead().commit;
+        Commit headcommit = readObject(join(commits, Branch.load(Branch.getHead()).getEndCommit()), Commit.class);
         if (headcommit.getFileversion().keySet().contains(filename)) {
             stage.AddToRemoval(filename);
             File file = join(CWD, filename);
@@ -165,14 +155,13 @@ public class Repository {
     }
 
     public static void LOG() {
-        Tree tree = Tree.load();
-        Tree.Node node = tree.getCurrenthead();
+        Commit commit = readObject(join(commits, Branch.load(Branch.getHead()).getEndCommit()), Commit.class);
 
-        while (node.parent1 != null) {
-            System.out.println(node.commit.toString());
-            node = node.parent1;
+        while (!commit.getParentID1().equals("")) {
+            System.out.println(commit);
+            commit = readObject(join(commits, commit.getParentID1()), Commit.class);
         }
-        System.out.println(node.commit.toString());
+        System.out.println(commit);
     }
 
     public static void GlobalLOG() {
@@ -183,7 +172,7 @@ public class Repository {
         for (String i : commitNames) {
             file = join(commits, i);
             commit = readObject(file, Commit.class);
-            System.out.println(commit);
+            System.out.println(commit.toString());
         }
     }
 
@@ -213,7 +202,7 @@ public class Repository {
         List<String> branchNames = plainFilenamesIn(branches);
         Collections.sort(branchNames);
         for (String i : branchNames) {
-            if (i.equals(Branch.getCurrentBranchName())) {
+            if (i.equals(Branch.getHead())) {
                 System.out.println('*' + i);
             } else {
                 System.out.println(i);
@@ -222,7 +211,7 @@ public class Repository {
         System.out.println();
 
         System.out.println("=== Staged Files ===");
-        Stage stage = Stage.load(Branch.getCurrentBranchName());
+        Stage stage = Stage.load(Branch.getHead());
         List<String> addition = new LinkedList<>();
         for (String i : stage.getAddition().keySet()) {
             addition.add(i);
@@ -246,8 +235,7 @@ public class Repository {
         Set<String> deleted = new HashSet<>();
         List<String> untracked = new LinkedList<>();
 
-        Tree tree = Tree.load();
-        Commit commit = tree.getCurrenthead().commit;
+        Commit commit = readObject(join(commits, Branch.load(Branch.getHead()).getEndCommit()), Commit.class);
         Blob blob;
         boolean tracked;
         for (String i : allfiles) {
@@ -310,15 +298,14 @@ public class Repository {
         if (!branchnames.contains(branchname)) {
             throw new GitletException("No such branch exists.");
         }
-        if (branchname.equals(Branch.getCurrentBranchName())) {
+        if (branchname.equals(Branch.getHead())) {
             throw new GitletException("No need to checkout the current branch.");
         }
 
         Branch newbranch = Branch.load(branchname);
-        Tree tree = Tree.load();
-        Commit currentcommit = tree.getCurrenthead().commit;
-        Commit newcommit = newbranch.getEndCommit();
-        Stage stage = Stage.load(Branch.getCurrentBranchName());
+        Commit currentcommit = readObject(join(commits, Branch.load(Branch.getHead()).getEndCommit()), Commit.class);
+        Commit newcommit = readObject(join(commits, newbranch.getEndCommit()), Commit.class);
+        Stage stage = Stage.load(Branch.getHead());
         Map<String, String> addition = stage.getAddition();
         List<String> filenames = plainFilenamesIn(CWD);
         for (String i : filenames) {
@@ -341,21 +328,21 @@ public class Repository {
             content = readObject(join(blobs, blobID), Blob.class).getContent();
             writeContents(file, content);
         }
-        Branch.changeCurrentBranch(branchname);
+        Branch.changeHead(branchname);
         stage.clear();
         stage.save();
-        tree.changeBranch(branchname);
-        tree.save();
     }
 
     public static void CHECKOUT_file(String name) {
-        Tree tree = Tree.load();
-        Commit commit = tree.getCurrenthead().commit;
+        Commit commit = readObject(join(commits, Branch.load(Branch.getHead()).getEndCommit()), Commit.class);
 
         checkoutfile(name, commit);
     }
 
     public static void CHECKOUT_file(String ID, String name) {
+        if (ID.length() < 40) {
+            ID = findID(ID);
+        }
         File commitfile = join(commits, ID);
         if (!commitfile.exists()) {
             throw new GitletException("No commit with that id exists.");
@@ -377,10 +364,20 @@ public class Repository {
         writeContents(f, content);
     }
 
+    private static String findID(String shortID) {
+        List<String> IDs = plainFilenamesIn(commits);
+        int length = shortID.length();
+        for (String i : IDs) {
+            if (shortID.equals(i.substring(0, length))) {
+                return i;
+            }
+        }
+        throw new GitletException("No commit with that id exists.");
+    }
+
     public static void BRANCH(String name) {
         Branch newbranch = new Branch(name);
-        Tree tree = Tree.load();
-        Commit currentcommit = tree.getCurrenthead().commit;
+        Commit currentcommit = readObject(join(commits, Branch.load(Branch.getHead()).getEndCommit()), Commit.class);
 
         newbranch.setEndCommit(currentcommit);
         newbranch.save();
@@ -392,7 +389,7 @@ public class Repository {
             throw new GitletException("A branch with that name does not exist.");
         }
 
-        if (name.equals(Branch.getCurrentBranchName())) {
+        if (name.equals(Branch.getHead())) {
             throw new GitletException("Cannot remove the current branch.");
         }
 
@@ -400,18 +397,147 @@ public class Repository {
     }
 
     public static void RESET(String ID) {
+        if (ID.length() < 40) {
+            ID = findID(ID);
+        }
         File commitfile = join(commits, ID);
         if (!commitfile.exists()) {
             throw new GitletException("No commit with that id exists.");
         }
 
         Commit commit = readObject(commitfile, Commit.class);
+        List<String> filenames = plainFilenamesIn(CWD);
+        for (String i : filenames) {
+            restrictedDelete(join(CWD, i));
+        }
+        String blobID;
+        File file;
+        byte[] content;
+        Map<String, String> fileversion = commit.getFileversion();
+        for (String i : fileversion.keySet()) {
+            blobID = fileversion.get(i);
+            file = join(CWD, i);
+            content = readObject(join(blobs, blobID), Blob.class).getContent();
+            writeContents(file, content);
+        }
+
+        Stage stage = Stage.load(Branch.getHead());
+        stage.clear();
+        stage.save();
+
+        Branch branch = Branch.load(Branch.getHead());
+        branch.setEndCommit(commit);
+        branch.save();
+    }
+
+    public static void MERGE(String branch) {
+        File branchfile = join(branches, Branch.load(branch).getEndCommit());
+        if (!branchfile.exists()) {
+            throw new GitletException("A branch with that name does not exist.");
+        }
+        if (branch.equals(Branch.getHead())) {
+            throw new GitletException("Cannot merge a branch with itself.");
+        }
+
+        Commit commit1 = readObject(join(branches, Branch.load(Branch.getHead()).getEndCommit()), Commit.class);
+        Commit commit2 = readObject(branchfile, Commit.class);
+
+        String splitpointID = getSplitPointCommitId(commit1.getID(), commit2.getID());
+
+        //check if they are linear relationship
+        if (splitpointID.equals(commit2.getID())) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return;
+        }
+        if (splitpointID.equals(commit1.getID())) {
+            CHECKOUT_branch(branch);
+            System.out.println("Current branch fast-forwarded.");
+            return;
+        }
+
+        Stage stage = Stage.load(Branch.getHead());
+        if (!stage.getAddition().isEmpty() || !stage.getRemoval().isEmpty()) {
+            throw new GitletException("You have uncommitted changes.");
+        }
+
+        Commit splitpoint = Commit.load(splitpointID);
+
+        boolean conflict = processMerge(stage, splitpoint, commit1, commit2);
+
+        stage.save();
+        Commit commit = new Commit(String.format("Merged %s into %s.", branch, Branch.getHead()), new Date(), commit1.getID(), commit2.getID());
+        if (conflict) {
+            System.out.println("Encountered a merge conflict.");
+        }
+    }
+
+    private static boolean processMerge(Stage stage, Commit split, Commit commit1, Commit commit2) {
+        List<String> untrackedfiles = plainFilenamesIn(CWD);
+        for (String i : stage.getAddition().keySet()) {
+            untrackedfiles.remove(i);
+        }
+        for (String i : stage.getRemoval()) {
+            untrackedfiles.remove(i);
+        }
+
+        Set<String> allfiles = new HashSet<>();
+        allfiles.addAll(split.getFileversion().keySet());
+        allfiles.addAll(commit1.getFileversion().keySet());
+        allfiles.addAll(commit2.getFileversion().keySet());
+
+        for (String i : allfiles) {
+
+        }
+
+        return false;
+    }
+
+    private static String getSplitPointCommitId(String currentCommitId, String mergedCommitId) {
+        Set<String> commitSet = new HashSet<>();
+        Queue<String> bfsQueue = new ArrayDeque<>();
+        bfsQueue.add(currentCommitId);
+        while (!bfsQueue.isEmpty()) {
+            String commitId = bfsQueue.remove();
+            Commit commit = Commit.load(commitId);
+            commitSet.add(commitId);
+            if (!commit.getParentID1().equals("")) {
+                bfsQueue.add(commit.getParentID1());
+            }
+            if (!commit.getParentID2().equals("")) {
+                bfsQueue.add(commit.getParentID2());
+            }
+        }
+
+        bfsQueue.add(mergedCommitId);
+        while (!bfsQueue.isEmpty()) {
+            String commitId = bfsQueue.remove();
+            Commit commit = Commit.load(commitId);
+            if (commitSet.contains(commitId)) {
+                return commitId;
+            }
+            if (!commit.getParentID1().equals("")) {
+                bfsQueue.add(commit.getParentID1());
+            }
+            if (!commit.getParentID2().equals("")) {
+                bfsQueue.add(commit.getParentID2());
+            }
+        }
+
+        return null;
+    }
+
+    private static void createFile(String name, String blob1_name, String blob2_name) {
+        String currentContents;
+        String mergedContents;
+        currentContents = readObject(join(blobs, blob1_name), Blob.class).getContent().toString();
+        mergedContents = readObject(join(blobs, blob2_name), Blob.class).getContent().toString();
+        writeContents(join(CWD, name), "<<<<<<< HEAD\n" + currentContents + "=======\n" + mergedContents + ">>>>>>>\n");
     }
 
     public static void main(String[] args) {
-        INIT();
-        ADD("gitlet-design.md");
-        COMMIT("added");
-        LOG();
+//        INIT();
+//        ADD("gitlet-design.md");
+//        COMMIT("added");
+//        LOG();
     }
 }

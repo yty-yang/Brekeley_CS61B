@@ -93,15 +93,13 @@ public class Main {
                 }
                 throw new GitletException("No command with that name exists.");
             case "branch":
-                Repository.InitCheck();
                 oprand_check(args, 2);
+                Repository.InitCheck();
 
                 message = args[1];
-                Repository.InitCheck();
                 Repository.BRANCH(message);
                 break;
             case "rm-branch":
-                Repository.InitCheck();
                 oprand_check(args, 2);
 
                 message = args[1];
@@ -109,7 +107,6 @@ public class Main {
                 Repository.RMBRANCH(message);
                 break;
             case "reset":
-                Repository.InitCheck();
                 oprand_check(args, 2);
 
                 message = args[1];
@@ -117,7 +114,11 @@ public class Main {
                 Repository.RESET(message);
                 break;
             case "merge":
+                oprand_check(args, 2);
                 Repository.InitCheck();
+
+                message = args[1];
+                Repository.MERGE(message);
                 break;
             default:
                 throw new GitletException("No command with that name exists.");

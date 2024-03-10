@@ -70,6 +70,14 @@ public class Commit implements Serializable {
         return message;
     }
 
+    public String getParentID1() {
+        return parentID1;
+    }
+
+    public String getParentID2() {
+        return parentID2;
+    }
+
     public void addBlob(Map<String, String> m) {
         fileversion = m;
     }
